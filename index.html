@@ -38,12 +38,13 @@
 <body>
 
     <div class="container">
-        <img src="https://hamiltonplumbingperth.com.au/wp-content/uploads/elementor/thumbs/Hamilton-Plumbing-Logo-Negative-okexychrvwd6xcrjc8ipweyl2pn3uech4mf7aezym8.png" alt="Company Logo" class="logo"> 
         <h2>Facebook Followers:</h2>
         <span id="fb-followers" class="count loading">Loading...</span>
     </div>
 
     <script>
+        let lastCount = null; // Store last known follower count
+
         async function getFacebookFollowers() {
             const fbPageId = "384119535310580";
             const accessToken = "EAAQxZB27i6t0BO22buwYdEWM8MHZBylKnWysZCdizXnbtZAZCxWZCul38k2YOkMBlHnaFPXvp2mEbYIdzYZCyrtMelfq8k6Ht06ibNP9xU9aVD5DTsfKwI11ZAmVkZAnrk8rlBOvAUXynIeBfE4JMO2rToef1VaF1t3QZB0hFKxEiajoZA7W3G4rsE88xbS";
@@ -55,18 +56,29 @@
                 if (data.error) {
                     throw new Error(data.error.message);
                 }
+
+                let newCount = data.followers_count;
                 
-                document.getElementById("fb-followers").classList.remove("loading");
-                document.getElementById("fb-followers").innerText = data.followers_count || "Error";
+                if (newCount !== lastCount) { // Only update if different
+                    document.getElementById("fb-followers").classList.remove("loading");
+                    document.getElementById("fb-followers").innerText = newCount || "Error";
+                    lastCount = newCount; // Update last known count
+                }
+                
+                // Call function again after 5 seconds (reduces API requests)
+                setTimeout(getFacebookFollowers, 5000);
+
             } catch (error) {
                 console.error("Error fetching data:", error);
                 document.getElementById("fb-followers").innerText = "Error";
+                
+                // Retry after 10 seconds in case of error
+                setTimeout(getFacebookFollowers, 10000);
             }
         }
 
-        // Fetch followers every 30 seconds
+        // Initial call
         getFacebookFollowers();
-        setInterval(getFacebookFollowers, 30000);
     </script>
 
 </body>
