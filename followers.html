@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Live Follower Count</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #222;
+            color: white;
+        }
+        .container {
+            background: #333;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            display: inline-block;
+        }
+        .logo {
+            width: 150px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        .count {
+            font-size: 3em;
+            font-weight: bold;
+            color: #1877F2;
+        }
+        .loading {
+            font-size: 1.5em;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <img src="https://hamiltonplumbingperth.com.au/wp-content/uploads/elementor/thumbs/Hamilton-Plumbing-Logo-Negative-okexychrvwd6xcrjc8ipweyl2pn3uech4mf7aezym8.png" alt="Company Logo" class="logo"> 
+        <h2>Facebook Followers:</h2>
+        <span id="fb-followers" class="count loading">Loading...</span>
+    </div>
+
+    <script>
+        async function getFacebookFollowers() {
+            const fbPageId = "384119535310580";
+            const accessToken = "EAAQxZB27i6t0BO22buwYdEWM8MHZBylKnWysZCdizXnbtZAZCxWZCul38k2YOkMBlHnaFPXvp2mEbYIdzYZCyrtMelfq8k6Ht06ibNP9xU9aVD5DTsfKwI11ZAmVkZAnrk8rlBOvAUXynIeBfE4JMO2rToef1VaF1t3QZB0hFKxEiajoZA7W3G4rsE88xbS";
+
+            try {
+                let response = await fetch(`https://graph.facebook.com/v19.0/${fbPageId}?fields=followers_count&access_token=${accessToken}`);
+                let data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+                
+                document.getElementById("fb-followers").classList.remove("loading");
+                document.getElementById("fb-followers").innerText = data.followers_count || "Error";
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                document.getElementById("fb-followers").innerText = "Error";
+            }
+        }
+
+        // Fetch followers every 30 seconds
+        getFacebookFollowers();
+        setInterval(getFacebookFollowers, 30000);
+    </script>
+
+</body>
+</html>
