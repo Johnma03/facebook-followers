@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facebook Live Follower Count</title>
+    <title>Live Follower Counter</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -18,17 +18,15 @@
             border-radius: 15px;
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
             display: inline-block;
-        }
-        .logo {
-            width: 150px;
-            height: auto;
-            margin-bottom: 15px;
+            margin: 10px;
         }
         .count {
             font-size: 3em;
             font-weight: bold;
-            color: #1877F2;
+            transition: all 0.3s ease-in-out; /* Smooth animation */
         }
+        .fb-count { color: #1877F2; } /* Facebook Blue */
+        .ig-count { color: #E1306C; }  /* Instagram Pink */
         .loading {
             font-size: 1.5em;
             color: gray;
@@ -39,46 +37,62 @@
 
     <div class="container">
         <h2>Facebook Followers:</h2>
-        <span id="fb-followers" class="count loading">Loading...</span>
+        <span id="fb-followers" class="count fb-count loading">Loading...</span>
+    </div>
+
+    <div class="container">
+        <h2>Instagram Followers:</h2>
+        <span id="ig-followers" class="count ig-count loading">Loading...</span>
     </div>
 
     <script>
-        let lastCount = null; // Store last known follower count
+        let lastFbCount = null;
+        let lastIgCount = null;
 
-        async function getFacebookFollowers() {
-            const fbPageId = "384119535310580";
-            const accessToken = "EAAQxZB27i6t0BO22buwYdEWM8MHZBylKnWysZCdizXnbtZAZCxWZCul38k2YOkMBlHnaFPXvp2mEbYIdzYZCyrtMelfq8k6Ht06ibNP9xU9aVD5DTsfKwI11ZAmVkZAnrk8rlBOvAUXynIeBfE4JMO2rToef1VaF1t3QZB0hFKxEiajoZA7W3G4rsE88xbS";
+        async function getFollowers() {
+            const fbPageId = "384119535310580";  
+            const instaUserId = "17841404094321565";  
+            const accessToken = "EAAQxZB27i6t0BO22buwYdEWM8MHZBylKnWysZCdizXnbtZAZCxWZCul38k2YOkMBlHnaFPXvp2mEbYIdzYZCyrtMelfq8k6Ht06ibNP9xU9aVD5DTsfKwI11ZAmVkZAnrk8rlBOvAUXynIeBfE4JMO2rToef1VaF1t3QZB0hFKxEiajoZA7W3G4rsE88xb";  
+
+            const fbUrl = `https://graph.facebook.com/v19.0/${fbPageId}?fields=followers_count&access_token=${accessToken}`;
+            const igUrl = `https://graph.facebook.com/v19.0/${instaUserId}?fields=followers_count&access_token=${accessToken}`;
 
             try {
-                let response = await fetch(`https://graph.facebook.com/v19.0/${fbPageId}?fields=followers_count&access_token=${accessToken}`);
-                let data = await response.json();
+                let [fbRes, igRes] = await Promise.all([
+                    fetch(fbUrl).then(res => res.json()),
+                    fetch(igUrl).then(res => res.json())
+                ]);
 
-                if (data.error) {
-                    throw new Error(data.error.message);
-                }
+                if (fbRes.error) throw new Error(fbRes.error.message);
+                if (igRes.error) throw new Error(igRes.error.message);
 
-                let newCount = data.followers_count;
-                
-                if (newCount !== lastCount) { // Only update if different
-                    document.getElementById("fb-followers").classList.remove("loading");
-                    document.getElementById("fb-followers").innerText = newCount || "Error";
-                    lastCount = newCount; // Update last known count
-                }
-                
-                // Call function again after 5 seconds (reduces API requests)
-                setTimeout(getFacebookFollowers, 5000);
+                updateCounter("fb-followers", fbRes.followers_count, lastFbCount);
+                updateCounter("ig-followers", igRes.followers_count, lastIgCount);
+
+                lastFbCount = fbRes.followers_count;
+                lastIgCount = igRes.followers_count;
 
             } catch (error) {
                 console.error("Error fetching data:", error);
                 document.getElementById("fb-followers").innerText = "Error";
-                
-                // Retry after 10 seconds in case of error
-                setTimeout(getFacebookFollowers, 10000);
+                document.getElementById("ig-followers").innerText = "Error";
+            }
+
+            setTimeout(getFollowers, 10000); // Update every 10 sec
+        }
+
+        function updateCounter(elementId, newCount, lastCount) {
+            let counter = document.getElementById(elementId);
+            counter.classList.remove("loading");
+            counter.innerText = newCount || "Error";
+
+            if (lastCount !== null && newCount > lastCount) {
+                counter.style.transform = "scale(1.2)";
+                setTimeout(() => counter.style.transform = "scale(1)", 300);
             }
         }
 
-        // Initial call
-        getFacebookFollowers();
+        getFollowers(); // Initial call
     </script>
 
 </body>
